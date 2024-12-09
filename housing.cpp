@@ -1,59 +1,33 @@
 #include "housing.h"
-#include <QJsonObject>
-#include <QJsonArray>
-
-using namespace std;
 
 HousingListing::HousingListing(string addr, string hood, double p, int beds,
-                               double baths, string desc, Amenities amen)
-    : address(addr), neighborhood(hood), price(p), bedrooms(beds),
-    bathrooms(baths), description(desc), amenities(amen) {}
+                               double baths, string desc, Amenities amen,
+                               string email, int listingId)
+    : id(listingId), address(addr), neighborhood(hood), price(p),
+    bedrooms(beds), bathrooms(baths), description(desc),
+    amenities(amen), landlordEmail(email) {}
 
-QJsonObject HousingListing::toJson() const {
-    QJsonObject json;
-    json["address"] = QString::fromStdString(address);
-    json["neighborhood"] = QString::fromStdString(neighborhood);
-    json["price"] = price;
-    json["bedrooms"] = bedrooms;
-    json["bathrooms"] = bathrooms;
-    json["description"] = QString::fromStdString(description);
+HousingListing HousingListing::fromCsv(const QString& line) {
+    QStringList fields = line.split(',');
+    if(fields.size() < 7) throw runtime_error("Invalid CSV format");
 
-    QJsonObject amenJson;
-    amenJson["furnished"] = amenities.furnished;
-    amenJson["utilitiesIncluded"] = amenities.utilitiesIncluded;
-    amenJson["nearTransit"] = amenities.nearTransit;
-    amenJson["laundry"] = amenities.laundry;
-    amenJson["wifi"] = amenities.wifi;
-    amenJson["petFriendly"] = amenities.petFriendly;
+    QStringList amenityFields = fields[6].split(';');
+    Amenities amen = {
+        amenityFields[0] == "1",
+        amenityFields[1] == "1",
+        amenityFields[2] == "1",
+        amenityFields[3] == "1",
+        amenityFields[4] == "1",
+        amenityFields[5] == "1"
+    };
 
-    json["amenities"] = amenJson;
-    json["imageUrl"] = QString::fromStdString(imageUrl);
-
-    return json;
-}
-
-HousingListing HousingListing::fromJson(const QJsonObject& json) {
-    try {
-        QJsonObject amenJson = json["amenities"].toObject();
-        Amenities amen = {
-            amenJson["furnished"].toBool(),
-            amenJson["utilitiesIncluded"].toBool(),
-            amenJson["nearTransit"].toBool(),
-            amenJson["laundry"].toBool(),
-            amenJson["wifi"].toBool(),
-            amenJson["petFriendly"].toBool()
-        };
-
-        return HousingListing(
-            json["address"].toString().toStdString(),
-            json["neighborhood"].toString().toStdString(),
-            json["price"].toDouble(),
-            json["bedrooms"].toInt(),
-            json["bathrooms"].toDouble(),
-            json["description"].toString().toStdString(),
-            amen
-            );
-    } catch (const exception& e) {
-        throw runtime_error("Error creating listing from JSON: " + string(e.what()));
-    }
+    return HousingListing(
+        fields[0].toStdString(),
+        fields[1].toStdString(),
+        fields[2].toDouble(),
+        fields[3].toInt(),
+        fields[4].toDouble(),
+        fields[5].toStdString(),
+        amen
+        );
 }

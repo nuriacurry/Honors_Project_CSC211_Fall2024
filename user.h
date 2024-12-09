@@ -2,12 +2,12 @@
 #define USER_H
 
 #include <QString>
-#include <QJsonObject>
-#include <QJsonArray>
 #include <vector>
 #include <memory>
 #include <QObject>
 #include <fstream>
+#include <QDir>
+#include <QFile>
 
 using namespace std;
 
@@ -33,7 +33,6 @@ protected:
     QString passwordHash;
     vector<int> favoriteListings;
     vector<int> applications;
-
     void setPasswordHash(const QString& hash) { passwordHash = hash; }
 
 public:
@@ -52,30 +51,28 @@ public:
     const vector<int>& getFavorites() const { return favoriteListings; }
     const vector<int>& getApplications() const { return applications; }
 
-    virtual QJsonObject toJson() const;
+    virtual QString toCsv() const;
     static QString hashPassword(const QString& password);
+    static shared_ptr<BaseUser> fromCsv(const QString& line);
 };
 
 class StudentUser : public BaseUser {
 private:
     QString studentId;
     QString major;
-
 public:
     StudentUser(const QString& email, const QString& password,
-                const QString& studentId = "", const QString& major = "");
+                const QString& id = "", const QString& maj = "");
     bool canAddListings() const override { return false; }
     QString getUserType() const override { return "student"; }
-
-    QJsonObject toJson() const override;
-    static shared_ptr<StudentUser> fromJson(const QJsonObject& json);
+    QString toCsv() const override;
+    static shared_ptr<StudentUser> fromCsv(const QString& line);
 };
 
 class LandlordUser : public BaseUser {
 private:
     QString verificationStatus;
     vector<int> ownedListings;
-
 public:
     LandlordUser(const QString& email, const QString& password);
     bool canAddListings() const override { return true; }
@@ -83,9 +80,6 @@ public:
 
     void addOwnedListing(int listingId);
     const vector<int>& getOwnedListings() const { return ownedListings; }
-
-    QJsonObject toJson() const override;
-    static shared_ptr<LandlordUser> fromJson(const QJsonObject& json);
 };
 
 class UserManager : public QObject {
@@ -93,11 +87,22 @@ class UserManager : public QObject {
 
 private:
     static UserManager* instance;
-    const QString USER_DATA_FILE = "users.json";
+    const QString USER_FILE = "users.csv";
+    void saveToFile() {
+        QFile file(USER_FILE);
+        if (file.open(QIODevice::WriteOnly)) {
+            QTextStream out(&file);
+            out << "email,password_hash,type\n";
+            for (const auto& user : users) {
+                out << user->getEmail() << ","
+                    << user->getPasswordHash() << ","
+                    << user->getUserType() << "\n";
+            }
+        }
+    }
     vector<shared_ptr<BaseUser>> users;
 
     UserManager();
-    void saveToFile();
     void loadFromFile();
 
 public:
@@ -110,6 +115,13 @@ public:
         }
         return info;
     }
+
+    void clearAllUsers() {
+        users.clear();
+        saveToFile();
+        qDebug() << "All users cleared";
+    }
+
     static UserManager* getInstance();
 
     shared_ptr<BaseUser> registerUser(const QString& email, const QString& password,

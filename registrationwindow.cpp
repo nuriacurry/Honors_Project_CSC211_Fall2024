@@ -2,6 +2,8 @@
 #include <QVBoxLayout>
 #include <QMessageBox>
 #include <QFormLayout>
+#include "passwordvalidator.h"
+#include "user.h"
 
 RegistrationWindow::RegistrationWindow(QWidget *parent) : QDialog(parent) {
     setupUI();
@@ -12,69 +14,72 @@ void RegistrationWindow::setupUI() {
     setFixedWidth(400);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    QFormLayout *formLayout = new QFormLayout();
 
-    // Create form layout for better alignment
-    QFormLayout *formLayout = new QFormLayout;
+    // Basic Info Section
+    QLabel *basicInfoLabel = new QLabel("Basic Information", this);
+    basicInfoLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
+    formLayout->addRow(basicInfoLabel);
 
-    // Email field
     emailInput = new QLineEdit(this);
     emailInput->setPlaceholderText("username@stu.bmcc.cuny.edu");
     formLayout->addRow("BMCC Email:", emailInput);
 
-    // Password requirements
-    QLabel* requirementsLabel = new QLabel(PasswordValidator::getRequirements());
-    requirementsLabel->setStyleSheet("color: #666666; font-size: 10px;");
-    mainLayout->addWidget(requirementsLabel);
-
-    // Password fields
     passwordInput = new QLineEdit(this);
     passwordInput->setEchoMode(QLineEdit::Password);
-    passwordInput->setPlaceholderText("Enter password");
+    passwordInput->setPlaceholderText("Minimum 8 characters");
     formLayout->addRow("Password:", passwordInput);
 
     confirmPasswordInput = new QLineEdit(this);
     confirmPasswordInput->setEchoMode(QLineEdit::Password);
-    confirmPasswordInput->setPlaceholderText("Re-enter password");
     formLayout->addRow("Confirm Password:", confirmPasswordInput);
 
-    // User type selection
     userTypeCombo = new QComboBox(this);
     userTypeCombo->addItems({"Student", "Landlord"});
-    connect(userTypeCombo, &QComboBox::currentTextChanged,
-            this, &RegistrationWindow::onUserTypeChanged);
-    formLayout->addRow("Account Type:", userTypeCombo);
+    formLayout->addRow("User Type:", userTypeCombo);
+
+    // Student Information Section
+    QLabel *studentInfoLabel = new QLabel("Student Information", this);
+    studentInfoLabel->setStyleSheet("font-weight: bold; font-size: 14px; margin-top: 15px;");
+    formLayout->addRow(studentInfoLabel);
+
+    // Housing Preferences
+    QLabel *prefLabel = new QLabel("Housing Preferences", this);
+    prefLabel->setStyleSheet("font-weight: bold; font-size: 14px; margin-top: 15px;");
+    formLayout->addRow(prefLabel);
+
+    commuteInput = new QComboBox(this);
+    commuteInput->addItems({"15-30 minutes", "30-45 minutes", "45-60 minutes", "60+ minutes"});
+    formLayout->addRow("Max Commute Time:", commuteInput);
+
+    budgetInput = new QLineEdit(this);
+    budgetInput->setPlaceholderText("Maximum monthly rent");
+    formLayout->addRow("Budget ($/month):", budgetInput);
 
     mainLayout->addLayout(formLayout);
 
-    // Student-specific fields
-    studentFields = new QWidget(this);
-    QFormLayout *studentFormLayout = new QFormLayout(studentFields);
-
-    studentIdInput = new QLineEdit(this);
-    studentIdInput->setPlaceholderText("Enter your student ID");
-    studentFormLayout->addRow("Student ID:", studentIdInput);
-
-    majorInput = new QLineEdit(this);
-    majorInput->setPlaceholderText("Enter your major");
-    studentFormLayout->addRow("Major:", majorInput);
-
-    mainLayout->addWidget(studentFields);
-    studentFields->hide(); // Hidden by default
-
     // Register button
     registerButton = new QPushButton("Register", this);
-    registerButton->setStyleSheet("QPushButton { background-color: #4CAF50; color: white; padding: 8px; }");
+    registerButton->setStyleSheet(
+        "QPushButton {"
+        "    background-color: #4CAF50;"
+        "    color: white;"
+        "    padding: 8px;"
+        "    border-radius: 4px;"
+        "    font-weight: bold;"
+        "}"
+        "QPushButton:hover {"
+        "    background-color: #45a049;"
+        "}"
+        );
     connect(registerButton, &QPushButton::clicked, this, &RegistrationWindow::onRegisterButtonClicked);
     mainLayout->addWidget(registerButton);
 
-    // Status label
+    // Status label for errors
     statusLabel = new QLabel(this);
-    statusLabel->setStyleSheet("color: red; margin-top: 10px;");
+    statusLabel->setStyleSheet("color: red;");
     statusLabel->setWordWrap(true);
     mainLayout->addWidget(statusLabel);
-
-    // Show student fields by default if "Student" is selected
-    onUserTypeChanged(userTypeCombo->currentText());
 }
 
 void RegistrationWindow::onUserTypeChanged(const QString& type) {
@@ -90,6 +95,7 @@ void RegistrationWindow::onRegisterButtonClicked() {
     QString email = emailInput->text().trimmed();
     QString password = passwordInput->text();
     QString confirmPass = confirmPasswordInput->text();
+    QString userType = userTypeCombo->currentText().toLower();
 
     statusLabel->clear();
 
@@ -116,20 +122,6 @@ void RegistrationWindow::onRegisterButtonClicked() {
             statusLabel->setText("Passwords do not match");
             return;
         }
-
-        // Student-specific validation
-        QString userType = userTypeCombo->currentText().toLower();
-        if (userType == "student") {
-            if (studentIdInput->text().isEmpty()) {
-                statusLabel->setText("Student ID is required");
-                return;
-            }
-            if (majorInput->text().isEmpty()) {
-                statusLabel->setText("Major is required");
-                return;
-            }
-        }
-
         // Try to register
         UserManager::getInstance()->registerUser(email, password, confirmPass, userType);
 

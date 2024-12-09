@@ -1,0 +1,6 @@
+address,neighborhood,price,bedrooms,bathrooms,distance_to_bmcc,nearest_subway,description,amenities,landlord_email,landlord_phone,showing_times,requirements
+"520 W 156th St","Washington Heights",900,2,1,7.2,"A/C train","Student share pre-war building near express stop","furnished;utilities;wifi;laundry","john@landlord.com","212-555-0100","Mon 2-4PM,Wed 3-5PM","Credit check;Income verification"
+"234 Knickerbocker Ave","Bushwick",850,3,2,5.8,"L train","Student apartment with current BMCC roommates","furnished;wifi;pets","maria@landlord.com","212-555-0101","Tue 3-6PM,Thu 4-7PM","First and last month;Student ID"
+"165 E Houston St","Lower East Side",1200,1,1,1.2,"F train","Modern building with study lounge","utilities;wifi;laundry;gym","david@landlord.com","212-555-0102","Mon-Fri 1-5PM","BMCC student ID;Guarantor"
+"425 W 125th St","Harlem",950,2,1,4.5,"1 train","Renovated apartment near Columbia","wifi;laundry","sarah@landlord.com","212-555-0103","Sat 11AM-4PM","First month;Security deposit"
+"323 Bedford Ave","Williamsburg",1100,2,1,3.8,"L train","Sunny apartment near McCarren Park","utilities;wifi","mike@landlord.com","212-555-0104","Wed-Sun 12-6PM","Income verification;References"

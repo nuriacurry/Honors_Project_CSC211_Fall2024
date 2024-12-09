@@ -7,32 +7,18 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include "housing.h"
-#include "user.h"
 
 class ProfileView : public QDialog {
-    Q_OBJECT
-
-public:
-    explicit ProfileView(const QString& userEmail, QWidget *parent = nullptr);
-
-private slots:
-    void removeFavorite(int index);
-    void cancelApplication(int index);
-    void updateDisplay();  // Added this declaration
-
 private:
+    explicit ProfileView(const QString& userEmail, QWidget *parent = nullptr);
+    QString userEmail;
+    vector<HousingListing> favoriteListings;
+    QWidget* favoritesTab;
+
     void setupUI();
     void setupFavoritesTab(QWidget* tab);
-    void setupApplicationsTab(QWidget* tab);
     void loadFavorites();
-    void loadApplications();
-
-    QString userEmail;
-    shared_ptr<BaseUser> currentUser;
-    vector<HousingListing> favoriteListings;
-    QTabWidget* tabWidget;
-    QWidget* favoritesTab;
-    QWidget* applicationsTab;
+    void updateDisplay();
 };
 
 #endif

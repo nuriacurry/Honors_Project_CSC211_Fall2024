@@ -1,0 +1,61 @@
+/* Main Window */
+QMainWindow {
+    background-color: #f0f2f5;
+}
+
+/* Headings */
+QLabel[heading="true"] {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1a365d;
+}
+
+/* Search Filters */
+QLineEdit, QComboBox {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+}
+
+/* Buttons */
+QPushButton {
+    background-color: #2563eb;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: #1d4ed8;
+}
+
+/* Listing Cards */
+QFrame[objectName="listingCard"] {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+/* Price Labels */
+QLabel[objectName="priceLabel"] {
+    color: #059669;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Distance Info */
+QLabel[objectName="distanceLabel"] {
+    color: #4b5563;
+    font-style: italic;
+}
+
+/* Student-specific Info */
+QLabel[objectName="studentInfo"] {
+    color: #6366f1;
+    font-weight: bold;
+}

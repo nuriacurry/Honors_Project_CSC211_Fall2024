@@ -1,0 +1,6 @@
+email,name,phone,company,office_address,preferred_contact_method
+"john@landlord.com","John Smith","212-555-0100","NYC Student Housing","100 Broadway Suite 200","email"
+"maria@landlord.com","Maria Garcia","212-555-0101","Student Rentals NYC","55 West 21st St","phone"
+"david@landlord.com","David Cohen","212-555-0102","Manhattan Rentals","123 East 42nd St","either"
+"sarah@landlord.com","Sarah Johnson","212-555-0103","Uptown Properties","2120 Adam Clayton Powell","phone"
+"mike@landlord.com","Mike Wilson","212-555-0104","Brooklyn Student Living","180 Bedford Ave","email"

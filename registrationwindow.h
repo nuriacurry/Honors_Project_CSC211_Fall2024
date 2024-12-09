@@ -6,8 +6,6 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QComboBox>
-#include "user.h"
-#include "passwordvalidator.h"
 
 using namespace std;
 
@@ -21,17 +19,16 @@ public:
 private slots:
     void onRegisterButtonClicked();
     void onUserTypeChanged(const QString& type);
+    void showStudentFields(bool show);
 
 private:
     void setupUI();
-    void showStudentFields(bool show);
-
     QLineEdit *emailInput;
     QLineEdit *passwordInput;
     QLineEdit *confirmPasswordInput;
     QComboBox *userTypeCombo;
-    QLineEdit *studentIdInput;
-    QLineEdit *majorInput;
+    QComboBox *commuteInput;
+    QLineEdit *budgetInput;
     QPushButton *registerButton;
     QLabel *statusLabel;
     QWidget *studentFields;

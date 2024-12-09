@@ -1,6 +1,6 @@
 #include "listingdetail.h"
 #include <QMessageBox>
-
+#include <QtSql/QSqlDatabase>
 ListingDetail::ListingDetail(const HousingListing& listing, QWidget *parent)
     : QDialog(parent), listing(listing)
 {
@@ -9,28 +9,56 @@ ListingDetail::ListingDetail(const HousingListing& listing, QWidget *parent)
 }
 
 void ListingDetail::setupUI() {
-    setWindowTitle("Listing Details");
-    setFixedSize(600, 400);
+    QVBoxLayout* mainLayout = new QVBoxLayout(this);
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-
-    // Details content
+    // Add status label
     statusLabel = new QLabel(this);
-    statusLabel->setWordWrap(true);
     mainLayout->addWidget(statusLabel);
 
-    // Buttons
-    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    // Image
+    QLabel* imageLabel = new QLabel(this);
+    imageLabel->setPixmap(QPixmap(listing.getImageUrl()).scaled(300, 200));
+    mainLayout->addWidget(imageLabel);
 
-    QPushButton *favoriteButton = new QPushButton("Add to Favorites", this);
-    connect(favoriteButton, &QPushButton::clicked, this, &ListingDetail::addToFavorites);
-    buttonLayout->addWidget(favoriteButton);
+    // Map (placeholder)
+    QLabel* mapView = new QLabel(this);
+    mapView->setPixmap(QPixmap(":/images/map_placeholder.png").scaled(300, 200));
+    mainLayout->addWidget(mapView);
 
-    QPushButton *applyButton = new QPushButton("Send Application", this);
-    connect(applyButton, &QPushButton::clicked, this, &ListingDetail::sendApplication);
-    buttonLayout->addWidget(applyButton);
+    mainLayout->addLayout(mainLayout);
 
-    mainLayout->addLayout(buttonLayout);
+    // Contact Info
+    QGroupBox* contactBox = new QGroupBox("Contact Information", this);
+    QVBoxLayout* contactLayout = new QVBoxLayout(contactBox);
+
+    ContactInfo contact = listing.getContactInfo();
+    contactLayout->addWidget(new QLabel("Agent: " + contact.name));
+    contactLayout->addWidget(new QLabel("Email: " + contact.email));
+    contactLayout->addWidget(new QLabel("Phone: " + contact.phone));
+
+    QLabel* showingLabel = new QLabel("Available Showings:", this);
+    contactLayout->addWidget(showingLabel);
+
+    for (const auto& time : contact.showingTimes) {
+        contactLayout->addWidget(new QLabel(time.day + ": " +
+                                            time.startTime + " - " + time.endTime));
+    }
+
+    mainLayout->addWidget(contactBox);
+
+    // Email Template
+    QTextEdit* emailTemplate = new QTextEdit(this);
+    emailTemplate->setText(generateEmailTemplate());
+    emailTemplate->setReadOnly(true);
+
+    QPushButton* copyButton = new QPushButton("Copy Email Template", this);
+    connect(copyButton, &QPushButton::clicked, [emailTemplate]() {
+        QClipboard* clipboard = QGuiApplication::clipboard();
+        clipboard->setText(emailTemplate->toPlainText());
+    });
+
+    mainLayout->addWidget(emailTemplate);
+    mainLayout->addWidget(copyButton);
 }
 
 void ListingDetail::updateDisplay() {

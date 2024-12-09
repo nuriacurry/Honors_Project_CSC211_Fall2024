@@ -18,49 +18,38 @@ set(PROJECT_SOURCES
     profileview.cpp profileview.h
     user.cpp user.h
     registrationwindow.cpp registrationwindow.h
+    housing.cpp housing.h
+    database.cpp database.h
     filters.h
     distancemap.h
     passwordvalidator.h
+    csvreader.h
+    styles.qss
+    listings.csv
+    landlords.csv
+    amenities.csv
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(HomeQuest
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        housing.h
-        housing.cpp
     )
 else()
     if(ANDROID)
-        add_library(HomeQuest SHARED
-            ${PROJECT_SOURCES}
-        )
+        add_library(HomeQuest SHARED ${PROJECT_SOURCES})
     else()
-        add_executable(HomeQuest
-            ${PROJECT_SOURCES}
-        )
+        add_executable(HomeQuest ${PROJECT_SOURCES})
     endif()
 endif()
 
-target_link_libraries(HomeQuest PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-
-if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.HomeQuest)
-endif()
-
-set_target_properties(HomeQuest PROPERTIES
-    ${BUNDLE_ID_OPTION}
-    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-    MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
+target_link_libraries(HomeQuest PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
 )
 
-include(GNUInstallDirs)
-install(TARGETS HomeQuest
-    BUNDLE DESTINATION .
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+set_target_properties(HomeQuest PROPERTIES
+    MACOSX_BUNDLE TRUE
+    WIN32_EXECUTABLE TRUE
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)

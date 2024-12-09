@@ -51,11 +51,6 @@ void LoginWindow::setupUI() {
     mainLayout->addWidget(statusLabel);
 }
 
-void LoginWindow::showDebugInfo() {
-    QString info = UserManager::getInstance()->getDebugInfo();
-    QMessageBox::information(this, "Debug Information", info);
-}
-
 void LoginWindow::onLoginButtonClicked() {
     try {
         auto user = UserManager::getInstance()->loginUser(emailEdit->text(), passwordEdit->text());
@@ -64,5 +59,22 @@ void LoginWindow::onLoginButtonClicked() {
         }
     } catch (const exception& e) {
         statusLabel->setText(e.what());
+    }
+}
+
+void LoginWindow::showDebugInfo() {
+    QString info = UserManager::getInstance()->getDebugInfo();
+    QMessageBox msgBox;
+    msgBox.setText(info);
+
+    QPushButton* clearButton = msgBox.addButton("Clear All Users", QMessageBox::ResetRole);
+    msgBox.addButton(QMessageBox::Ok);
+
+    msgBox.exec();
+
+    if (msgBox.clickedButton() == clearButton) {
+        UserManager::getInstance()->clearAllUsers();
+        QMessageBox::information(this, "Users Cleared",
+                                 "All users have been cleared. Please restart the application.");
     }
 }
