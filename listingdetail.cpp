@@ -10,55 +10,78 @@ ListingDetail::ListingDetail(const HousingListing& listing, QWidget *parent)
 
 void ListingDetail::setupUI() {
     QVBoxLayout* mainLayout = new QVBoxLayout(this);
-
-    // Add status label
-    statusLabel = new QLabel(this);
-    mainLayout->addWidget(statusLabel);
+    setStyleSheet("QDialog { background-color: #371F76; color: white; }"
+                  "QPushButton { background-color: #C8A4D4; padding: 8px; border-radius: 4px; }"
+                  "QLabel { color: white; }");
 
     // Image
-    QLabel* imageLabel = new QLabel(this);
-    imageLabel->setPixmap(QPixmap(listing.getImageUrl()).scaled(300, 200));
+    imageLabel = new QLabel(this);
+    loadImage();
     mainLayout->addWidget(imageLabel);
 
-    // Map (placeholder)
-    QLabel* mapView = new QLabel(this);
-    mapView->setPixmap(QPixmap(":/images/map_placeholder.png").scaled(300, 200));
-    mainLayout->addWidget(mapView);
+    // Details
+    QString details = QString("<h2>%1</h2>"
+                              "<p><b>Price:</b> $%2</p>"
+                              "<p><b>Bedrooms:</b> %3</p>"
+                              "<p><b>Location:</b> %4</p>"
+                              "<p><b>Description:</b> %5</p>")
+                          .arg(QString::fromStdString(listing.getAddress()))
+                          .arg(listing.getPrice())
+                          .arg(listing.getBedrooms())
+                          .arg(QString::fromStdString(listing.getNeighborhood()))
+                          .arg(QString::fromStdString(listing.getDescription()));
 
-    mainLayout->addLayout(mainLayout);
+    QLabel* detailsLabel = new QLabel(details, this);
+    detailsLabel->setWordWrap(true);
+    mainLayout->addWidget(detailsLabel);
 
-    // Contact Info
-    QGroupBox* contactBox = new QGroupBox("Contact Information", this);
-    QVBoxLayout* contactLayout = new QVBoxLayout(contactBox);
+    // Update contact info display
+    QLabel* contactLabel = new QLabel(QString("<h3>Contact Information:</h3>"
+                                              "<p>Name: %1</p>"
+                                              "<p>Phone: %2</p>")
+                                          .arg(listing.getContactInfo().name.isEmpty() ? "Not provided" : listing.getContactInfo().name)
+                                          .arg(listing.getContactInfo().phone.isEmpty() ? "Not provided" : listing.getContactInfo().phone), this);
+    mainLayout->addWidget(contactLabel);
 
-    ContactInfo contact = listing.getContactInfo();
-    contactLayout->addWidget(new QLabel("Agent: " + contact.name));
-    contactLayout->addWidget(new QLabel("Email: " + contact.email));
-    contactLayout->addWidget(new QLabel("Phone: " + contact.phone));
+    // Update buttons
+    QHBoxLayout* buttonLayout = new QHBoxLayout;
 
-    QLabel* showingLabel = new QLabel("Available Showings:", this);
-    contactLayout->addWidget(showingLabel);
-
-    for (const auto& time : contact.showingTimes) {
-        contactLayout->addWidget(new QLabel(time.day + ": " +
-                                            time.startTime + " - " + time.endTime));
-    }
-
-    mainLayout->addWidget(contactBox);
-
-    // Email Template
-    QTextEdit* emailTemplate = new QTextEdit(this);
-    emailTemplate->setText(generateEmailTemplate());
-    emailTemplate->setReadOnly(true);
-
-    QPushButton* copyButton = new QPushButton("Copy Email Template", this);
-    connect(copyButton, &QPushButton::clicked, [emailTemplate]() {
-        QClipboard* clipboard = QGuiApplication::clipboard();
-        clipboard->setText(emailTemplate->toPlainText());
+    QPushButton* mapButton = new QPushButton("View on Map", this);
+    connect(mapButton, &QPushButton::clicked, this, [this]() {
+        QDesktopServices::openUrl(QUrl(listing.getMapUrl()));
     });
+    buttonLayout->addWidget(mapButton);
 
-    mainLayout->addWidget(emailTemplate);
-    mainLayout->addWidget(copyButton);
+    // Change to text message template
+    QPushButton* messageButton = new QPushButton("Copy Text Message Template", this);
+    connect(messageButton, &QPushButton::clicked, this, [this]() {
+        QString messageTemplate = generateMessageTemplate();
+        QGuiApplication::clipboard()->setText(messageTemplate);
+        QMessageBox::information(this, "Success", "Message template copied to clipboard!");
+    });
+    buttonLayout->addWidget(messageButton);
+
+    QPushButton* favoriteButton = new QPushButton(listing.getFavorite() ? "Remove from Favorites" : "Add to Favorites", this);
+    connect(favoriteButton, &QPushButton::clicked, [this, favoriteButton]() {
+        bool newState = !listing.getFavorite();
+        const_cast<HousingListing&>(listing).setFavorite(newState);
+        favoriteButton->setText(newState ? "Remove from Favorites" : "Add to Favorites");
+        QMessageBox::information(this, "Success",
+                                 newState ? "Added to favorites!" : "Removed from favorites!");
+        emit favoritesChanged();
+    });
+    buttonLayout->addWidget(favoriteButton);
+
+    mainLayout->addLayout(buttonLayout);
+}
+
+void ListingDetail::loadImage() {
+    QPixmap pixmap(listing.getImageUrl());
+    if (!pixmap.isNull()) {
+        imageLabel->setPixmap(pixmap.scaled(400, 300, Qt::KeepAspectRatio));
+    } else {
+        imageLabel->setText("Image not available");
+    }
 }
 
 void ListingDetail::updateDisplay() {
@@ -87,7 +110,6 @@ void ListingDetail::updateDisplay() {
     if (amenities.petFriendly) amenitiesText += "<li>Pet Friendly</li>";
     amenitiesText += "</ul>";
 
-    statusLabel->setText(details + amenitiesText);
 }
 
 void ListingDetail::addToFavorites() {
@@ -96,15 +118,5 @@ void ListingDetail::addToFavorites() {
     } catch (const exception& e) {
         QMessageBox::warning(this, "Error",
                              QString("Failed to add to favorites: %1").arg(e.what()));
-    }
-}
-
-void ListingDetail::sendApplication() {
-    try {
-        QMessageBox::information(this, "Application Sent",
-                                 "Your application has been sent! The property manager will contact you soon.");
-    } catch (const exception& e) {
-        QMessageBox::warning(this, "Error",
-                             QString("Failed to send application: %1").arg(e.what()));
     }
 }

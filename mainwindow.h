@@ -4,40 +4,41 @@
 #include <QMainWindow>
 #include <QLineEdit>
 #include <QComboBox>
-#include <QLabel>
 #include <QCheckBox>
 #include <QPushButton>
-#include <QFormLayout>
-#include <vector>
-#include <memory>
+#include <QVBoxLayout>
 #include "housing.h"
-#include <QTextEdit>
-#include <QApplication>
-#include <QTableWidget>
-#include <QTableWidgetItem>
+#include "csvreader.h"
+#include <QDesktopServices>
+#include <QUrl>
+#include "profileview.h"
 
-using namespace std;
 class MainWindow : public QMainWindow {
     Q_OBJECT
-private slots:
-    void searchListings();
 public:
     explicit MainWindow(QWidget *parent = nullptr);
-    void setUserEmail(const QString& email) {
-        userEmail = email;
-    }
+    void setUserEmail(const QString& email) { userEmail = email; }
+
+private slots:
+    void searchListings();
+    void showProfile();
+
 private:
+    void loadSuggestedListings();
+    QPushButton* profileButton;
+    void clearLayout(QLayout* layout);
+    void showListingDetail(const HousingListing& listing);
     QString userEmail;
     vector<HousingListing> listings;
     QLineEdit* minPriceEdit;
     QLineEdit* maxPriceEdit;
     QComboBox* bedroomCombo;
-    QComboBox* neighborhoodCombo;
+    QComboBox* boroughCombo;
+    QComboBox* commuteCombo;
     QCheckBox* amenityChecks[6];
     QWidget* resultsContainer;
     QVBoxLayout* resultsLayout;
     void setupUI();
-    void loadListingsFromCsv();
     void updateResultsDisplay(const vector<HousingListing>& filteredListings);
 };
 

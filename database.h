@@ -10,6 +10,7 @@
 #include <vector>
 #include <memory>
 #include "housing.h"
+#include <QTextStream>
 
 using namespace std;
 
@@ -17,16 +18,15 @@ class DatabaseManager {
 private:
     static DatabaseManager* instance;
     vector<HousingListing> listings;
-    const QString LISTINGS_FILE = "listings.csv";
-    const QString LANDLORDS_FILE = "landlords.csv";
+    const QString LISTINGS_FILE = ":/listings.csv";
 
 public:
     static DatabaseManager* getInstance();
     vector<HousingListing> getAllListings();
-    HousingListing getListing(int id);
-    void addListing(const HousingListing& listing);
     void loadListings();
     void saveListings();
+    void addListing(const HousingListing& listing);
+    HousingListing getListing(int id);
 };
 
 #endif

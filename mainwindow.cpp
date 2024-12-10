@@ -4,148 +4,227 @@
 #include <QHBoxLayout>
 #include <QGridLayout>
 #include <QMessageBox>
-#include "csvreader.h"
+#include <QFile>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
-    // Load stylesheet
-    QFile styleFile(":/styles.qss");
-    if (styleFile.open(QFile::ReadOnly)) {
-        setStyleSheet(QLatin1String(styleFile.readAll()));
-        styleFile.close();
-    }
+    setStyleSheet("QMainWindow { background-color: #371F76; }"
+                  "QLabel { color: white; }"
+                  "QPushButton { background-color: #C8A4D4; padding: 8px; border-radius: 4px; }"
+                  "QComboBox, QLineEdit { background-color: #643B9F; color: white; padding: 5px; border-radius: 4px; }");
 
-    // Load listings
     CSVReader reader(":/listings.csv");
     listings = reader.readListings();
     setupUI();
 }
 
 void MainWindow::setupUI() {
-    QWidget *centralWidget = new QWidget(this);
+    QWidget* centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
-    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget);
+    mainLayout->setSpacing(10);
+    mainLayout->setContentsMargins(20, 20, 20, 20);
 
-    // Header
-    QLabel *titleLabel = new QLabel("BMCC Student Housing Search", this);
-    titleLabel->setStyleSheet("font-size: 24px; font-weight: bold;");
-    mainLayout->addWidget(titleLabel);
+    // Top header with logo and profile
+    QHBoxLayout* headerLayout = new QHBoxLayout;
+    QLabel* titleLabel = new QLabel("HomeQuest", this);
+    titleLabel->setStyleSheet("font-size: 24px; font-weight: bold; color: white;");
+    headerLayout->addWidget(titleLabel);
+    headerLayout->addStretch();
 
-    // Filters
-    QGridLayout *filterLayout = new QGridLayout();
+    profileButton = new QPushButton("Profile", this);
+    connect(profileButton, &QPushButton::clicked, this, &MainWindow::showProfile);
+    profileButton->setStyleSheet("background-color: #C8A4D4; padding: 8px; border-radius: 4px;");
+    headerLayout->addWidget(profileButton);
+    mainLayout->addLayout(headerLayout);
 
-    // Price filters
+    // Filters grid
+    QGridLayout* filterLayout = new QGridLayout;
+    filterLayout->setSpacing(10);
+
+    // Price range (first row)
+    filterLayout->addWidget(new QLabel("Price Range:", this), 0, 0);
     minPriceEdit = new QLineEdit(this);
     maxPriceEdit = new QLineEdit(this);
-    minPriceEdit->setPlaceholderText("Min Price");
-    maxPriceEdit->setPlaceholderText("Max Price");
-    filterLayout->addWidget(new QLabel("Price Range:"), 0, 0);
     filterLayout->addWidget(minPriceEdit, 0, 1);
     filterLayout->addWidget(maxPriceEdit, 0, 2);
 
-    // Bedroom filter
+    // Bedrooms and Borough (second row)
+    filterLayout->addWidget(new QLabel("Bedrooms:", this), 1, 0);
     bedroomCombo = new QComboBox(this);
     bedroomCombo->addItems({"Any", "Studio", "1", "2", "3", "3+"});
-    filterLayout->addWidget(new QLabel("Bedrooms:"), 1, 0);
     filterLayout->addWidget(bedroomCombo, 1, 1);
 
-    // Neighborhood filter
-    neighborhoodCombo = new QComboBox(this);
-    neighborhoodCombo->addItems({"Any", "Washington Heights", "Bushwick", "Lower East Side",
-                                 "Harlem", "Williamsburg"});
-    filterLayout->addWidget(new QLabel("Neighborhood:"), 2, 0);
-    filterLayout->addWidget(neighborhoodCombo, 2, 1, 1, 2);
+    filterLayout->addWidget(new QLabel("Borough:", this), 1, 2);
+    boroughCombo = new QComboBox(this);
+    boroughCombo->addItems({"Any", "Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"});
+    filterLayout->addWidget(boroughCombo, 1, 3);
 
-    // Amenities
-    QGridLayout *amenityLayout = new QGridLayout();
-    const char* amenityLabels[] = {"Furnished", "Utilities Included", "Near Transit",
-                                   "Laundry", "WiFi", "Pet Friendly"};
-    for(int i = 0; i < 6; i++) {
-        amenityChecks[i] = new QCheckBox(amenityLabels[i], this);
-        amenityLayout->addWidget(amenityChecks[i], i/3, i%3);
-    }
-    filterLayout->addLayout(amenityLayout, 3, 0, 1, 3);
     mainLayout->addLayout(filterLayout);
 
+    // Amenities in a horizontal layout
+    QHBoxLayout* amenityLayout = new QHBoxLayout;
+    const char* amenityLabels[] = {"Furnished", "Utilities", "WiFi", "Laundry", "Near Transit", "Pet Friendly"};
+    for(int i = 0; i < 6; i++) {
+        amenityChecks[i] = new QCheckBox(amenityLabels[i], this);
+        amenityLayout->addWidget(amenityChecks[i]);
+    }
+    mainLayout->addLayout(amenityLayout);
+
     // Search button
-    QPushButton *searchButton = new QPushButton("Search", this);
+    QPushButton* searchButton = new QPushButton("Search", this);
+    searchButton->setStyleSheet("background-color: #C8A4D4; padding: 10px; border-radius: 4px;");
     connect(searchButton, &QPushButton::clicked, this, &MainWindow::searchListings);
     mainLayout->addWidget(searchButton);
 
-    // Results area
-    resultsContainer = new QWidget(this);
-    resultsLayout = new QVBoxLayout(resultsContainer);
-    resultsContainer->setMinimumHeight(400);
-    mainLayout->addWidget(resultsContainer);
-    resultsContainer->hide();
+    // Suggested listings section
+    QLabel* suggestedLabel = new QLabel("Suggested Listings", this);
+    suggestedLabel->setStyleSheet("color: white; font-size: 18px; font-weight: bold;");
+    mainLayout->addWidget(suggestedLabel);
 
-    setMinimumSize(800, 600);
+    // Results container
+    QScrollArea* scrollArea = new QScrollArea(this);
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setStyleSheet("QScrollArea { border: none; background-color: #371F76; }");
+
+    resultsContainer = new QWidget;
+    resultsLayout = new QVBoxLayout(resultsContainer);
+    resultsLayout->setAlignment(Qt::AlignTop); // Important to align content to top
+
+    scrollArea->setWidget(resultsContainer);
+    mainLayout->addWidget(scrollArea);
+
+    // Load initial suggestions
+    loadSuggestedListings();
+}
+
+void MainWindow::loadSuggestedListings() {
+    qDebug() << "Loading suggested listings...";
+    qDebug() << "Total listings:" << listings.size();
+
+    vector<HousingListing> suggestions;
+    for(const auto& listing : listings) {
+        if(listing.getPrice() <= 3000) { // Default value instead of userBudget
+            suggestions.push_back(listing);
+        }
+        if(suggestions.size() >= 5) break; // Limit number of suggestions
+    }
+
+    qDebug() << "Found" << suggestions.size() << "suggestions";
+    updateResultsDisplay(suggestions);
+}
+
+void MainWindow::showProfile() {
+    ProfileView* profile = new ProfileView(userEmail, this);
+    profile->exec();
+}
+
+void MainWindow::updateResultsDisplay(const vector<HousingListing>& filteredListings) {
+    clearLayout(resultsLayout);
+
+    if(filteredListings.empty()) {
+        QLabel* noResults = new QLabel("No listings found matching your criteria.");
+        noResults->setStyleSheet("color: white; padding: 20px;");
+        resultsLayout->addWidget(noResults);
+    } else {
+        for(const auto& listing : filteredListings) {
+            // Create card widget
+            QWidget* card = new QWidget;
+            QHBoxLayout* cardLayout = new QHBoxLayout(card);
+            card->setStyleSheet("background-color: #643B9F; border-radius: 8px; margin: 8px; padding: 12px;");
+
+            // Image
+            QLabel* imageLabel = new QLabel;
+            QPixmap pixmap(listing.getImageUrl());
+            if(!pixmap.isNull()) {
+                imageLabel->setPixmap(pixmap.scaled(150, 150, Qt::KeepAspectRatio));
+            } else {
+                qDebug() << "Failed to load image:" << listing.getImageUrl();
+                imageLabel->setText("No Image");
+                imageLabel->setStyleSheet("color: white;");
+            }
+            cardLayout->addWidget(imageLabel);
+
+            // Details
+            QVBoxLayout* detailsLayout = new QVBoxLayout;
+            QString details = QString("<div style='color: white;'>"
+                                      "<h3>%1</h3>"
+                                      "<p>%2</p>"
+                                      "<p><b>Price:</b> $%3</p>"
+                                      "<p><b>Bedrooms:</b> %4</p>"
+                                      "</div>")
+                                  .arg(QString::fromStdString(listing.getAddress()))
+                                  .arg(QString::fromStdString(listing.getNeighborhood()))
+                                  .arg(listing.getPrice())
+                                  .arg(listing.getBedrooms());
+
+            QLabel* detailsLabel = new QLabel(details);
+            detailsLayout->addWidget(detailsLabel);
+
+            // View Details button
+            QPushButton* viewButton = new QPushButton("View Details");
+            viewButton->setStyleSheet("background-color: #C8A4D4; color: white; padding: 8px;");
+            connect(viewButton, &QPushButton::clicked, [this, listing]() {
+                ListingDetail* detail = new ListingDetail(listing, this);
+                detail->exec();
+            });
+            detailsLayout->addWidget(viewButton);
+
+            cardLayout->addLayout(detailsLayout);
+            resultsLayout->addWidget(card);
+        }
+    }
+
+    resultsContainer->show();
 }
 
 void MainWindow::searchListings() {
-    vector<HousingListing> filteredListings;
     double minPrice = minPriceEdit->text().toDouble();
     double maxPrice = maxPriceEdit->text().toDouble();
-    QString neighborhood = neighborhoodCombo->currentText();
-    int bedrooms = bedroomCombo->currentText() == "Any" ? -1 :
-                       bedroomCombo->currentText() == "Studio" ? 0 :
-                       bedroomCombo->currentText().toInt();
+    QString borough = boroughCombo->currentText();
 
+    vector<HousingListing> filteredListings;
     for(const auto& listing : listings) {
-        if(minPrice > 0 && listing.getPrice() < minPrice) continue;
-        if(maxPrice > 0 && listing.getPrice() > maxPrice) continue;
-        if(bedrooms >= 0 && listing.getBedrooms() != bedrooms) continue;
-        if(neighborhood != "Any" && QString::fromStdString(listing.getNeighborhood()) != neighborhood) continue;
+        bool matches = true;
 
+        // Price filter
+        if(minPrice > 0 && listing.getPrice() < minPrice) matches = false;
+        if(maxPrice > 0 && listing.getPrice() > maxPrice) matches = false;
+
+        // Borough filter (simplified)
+        if(borough != "Any" && !QString::fromStdString(listing.getNeighborhood()).toLower().contains(borough.toLower().toLocal8Bit().constData()))
+            matches = false;
+
+        // Amenities (simplified check)
         const Amenities& amen = listing.getAmenities();
         if((amenityChecks[0]->isChecked() && !amen.furnished) ||
             (amenityChecks[1]->isChecked() && !amen.utilitiesIncluded) ||
-            (amenityChecks[2]->isChecked() && !amen.nearTransit) ||
+            (amenityChecks[2]->isChecked() && !amen.wifi) ||
             (amenityChecks[3]->isChecked() && !amen.laundry) ||
-            (amenityChecks[4]->isChecked() && !amen.wifi) ||
-            (amenityChecks[5]->isChecked() && !amen.petFriendly)) continue;
+            (amenityChecks[4]->isChecked() && !amen.nearTransit) ||
+            (amenityChecks[5]->isChecked() && !amen.petFriendly)) {
+            matches = false;
+        }
 
-        filteredListings.push_back(listing);
+        if(matches) filteredListings.push_back(listing);
     }
 
     updateResultsDisplay(filteredListings);
 }
 
-void MainWindow::updateResultsDisplay(const vector<HousingListing>& filteredListings) {
-    // Clear previous results
-    QLayoutItem* item;
-    while((item = resultsLayout->takeAt(0)) != nullptr) {
-        delete item->widget();
+void MainWindow::clearLayout(QLayout* layout) {
+    if (!layout) return;
+    while (QLayoutItem* item = layout->takeAt(0)) {
+        if (QWidget* widget = item->widget()) {
+            widget->deleteLater();
+        }
+        if (QLayout* childLayout = item->layout()) {
+            clearLayout(childLayout);
+        }
         delete item;
     }
+}
 
-    if(filteredListings.empty()) {
-        QLabel* noResults = new QLabel("No listings found matching your criteria.", this);
-        noResults->setStyleSheet("font-size: 13px; padding: 10px;");
-        resultsLayout->addWidget(noResults);
-    } else {
-        for(const auto& listing : filteredListings) {
-            QPushButton* listingButton = new QPushButton(this);
-            QString listingText = QString("Address: %1\nNeighborhood: %2\nPrice: $%3\n"
-                                          "Bedrooms: %4")
-                                      .arg(QString::fromStdString(listing.getAddress()))
-                                      .arg(QString::fromStdString(listing.getNeighborhood()))
-                                      .arg(listing.getPrice())
-                                      .arg(listing.getBedrooms());
-
-            listingButton->setText(listingText);
-            listingButton->setStyleSheet(
-                "text-align: left; padding: 10px; margin: 5px; "
-                "font-size: 13px; background-color: #f0f0f0; "
-                "min-height: 120px; min-width: 600px;");
-
-            connect(listingButton, &QPushButton::clicked, [this, listing]() {
-                ListingDetail* detail = new ListingDetail(listing, this);
-                detail->exec();
-            });
-
-            resultsLayout->addWidget(listingButton);
-        }
-    }
-
-    resultsContainer->show();
+void MainWindow::showListingDetail(const HousingListing& listing) {
+    ListingDetail* detail = new ListingDetail(listing, this);
+    detail->exec();
 }

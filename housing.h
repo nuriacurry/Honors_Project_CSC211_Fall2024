@@ -3,6 +3,8 @@
 
 #include <string>
 #include <QJsonObject>
+#include <QFile>  // Add this line
+#include <QDebug>
 
 using namespace std;
 
@@ -54,13 +56,29 @@ private:
     vector<QString> requirements;  // Add this
     QString imageUrl;  // Changed to QString
     ContactInfo contact;
+    string mapUrl;
+    bool isFavorite = false;
 
 public:
     HousingListing(string addr, string hood, double p, int beds,
                    double baths, string desc, Amenities amen,
                    string email = "", int listingId = -1);
 
-    QString getImageUrl() const { return imageUrl; }
+    QString getImageUrl() const {
+        // Remove quotes from imageUrl
+        QString cleanPath = imageUrl;
+        cleanPath.remove("\"");
+        QString path = QString(":/resources/images/%1").arg(cleanPath);
+        qDebug() << "Trying to load image from:" << path;
+        return path;
+    }
+
+    QString getMapUrl() const {
+        return QString::fromStdString(mapUrl);
+    }
+    void setMapUrl(const string& url) {
+        mapUrl = url;
+    }
     ContactInfo getContactInfo() const { return contact; }
 
     void setImagePath(const string& path) {
@@ -82,6 +100,7 @@ public:
     string getDescription() const { return description; }
     Amenities getAmenities() const { return amenities; }
     void setDistanceToBMCC(double dist) { distanceToBMCC = dist; }
+    double getDistanceToBMCC() const { return distanceToBMCC; }
     QString toCsv() const {
         return QString("%1,%2,%3,%4,%5,%6,%7")
         .arg(QString::fromStdString(address))
@@ -93,7 +112,15 @@ public:
             .arg(amenities.toCsv());
     }
 
+    void setFavorite(bool fav) { isFavorite = fav; }
+    bool getFavorite() const { return isFavorite; }
+
     static HousingListing fromCsv(const QString& line);
+    QString getContactName() const { return QString::fromStdString(landlordEmail); }
+    string getNearestSubway() const { return nearestSubway; }
+    int getId() const { return id; }
+    void setContactInfo(const ContactInfo& info) { contact = info; }
+
 };
 
 #endif

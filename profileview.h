@@ -3,22 +3,28 @@
 
 #include <QDialog>
 #include <QLabel>
-#include <QTabWidget>
 #include <QPushButton>
 #include <QVBoxLayout>
+#include <QScrollArea>
 #include "housing.h"
+#include "database.h"
+#include "listingdetail.h"
 
 class ProfileView : public QDialog {
-private:
-    explicit ProfileView(const QString& userEmail, QWidget *parent = nullptr);
-    QString userEmail;
-    vector<HousingListing> favoriteListings;
-    QWidget* favoritesTab;
+    Q_OBJECT
+public:
+    explicit ProfileView(const QString& email, QWidget* parent = nullptr);
 
+private slots:
+    void showTips();
+    void logout();
+    void updateFavorites();
+
+private:
+    QString userEmail;
+    QVBoxLayout* favoritesLayout;
     void setupUI();
-    void setupFavoritesTab(QWidget* tab);
-    void loadFavorites();
-    void updateDisplay();
+    QWidget* createListingCard(const HousingListing& listing);
 };
 
 #endif

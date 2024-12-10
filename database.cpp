@@ -1,26 +1,60 @@
 #include "database.h"
-#include <QDebug>
-#include <QDateTime>
-#include <QJsonDocument>
-#include <QJsonArray>
-#include <QDir>
 #include "csvreader.h"
 
-using namespace std;
-
 DatabaseManager* DatabaseManager::instance = nullptr;
-void DatabaseManager::loadListings() {
-    CSVReader reader(LISTINGS_FILE);
-    listings = reader.readListings();
+
+DatabaseManager* DatabaseManager::getInstance() {
+    if (!instance) {
+        instance = new DatabaseManager();
+    }
+    return instance;
+}
+
+vector<HousingListing> DatabaseManager::getAllListings() {
+    return listings;
 }
 
 void DatabaseManager::saveListings() {
-    QFile file(LISTINGS_FILE);
-    if (file.open(QIODevice::WriteOnly)) {
+    QString filePath = QDir::current().filePath("favorites.txt");
+    QFile file(filePath);
+    if(file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream out(&file);
-        out << "address,neighborhood,price,bedrooms,bathrooms,description,amenities\n";
-        for (const auto& listing : listings) {
-            out << listing.toCsv() << "\n";
+        for(const auto& listing : listings) {
+            if(listing.getFavorite()) {
+                out << QString::fromStdString(listing.getAddress()) << "\n";
+            }
+        }
+        file.close();
+    }
+    loadListings(); // Reload to refresh the display
+}
+
+void DatabaseManager::loadListings() {
+    QFile file(QDir::current().filePath("favorites.txt"));
+    if(file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&file);
+        QStringList addresses;
+        while(!in.atEnd()) {
+            addresses << in.readLine();
+        }
+        file.close();
+
+        // Mark favorites
+        for(auto& listing : listings) {
+            if(addresses.contains(QString::fromStdString(listing.getAddress()))) {
+                listing.setFavorite(true);
+            }
         }
     }
+}
+
+void DatabaseManager::addListing(const HousingListing& listing) {
+    listings.push_back(listing);
+}
+
+HousingListing DatabaseManager::getListing(int id) {
+    if (id < listings.size()) {
+        return listings[id];
+    }
+    throw runtime_error("Listing not found");
 }

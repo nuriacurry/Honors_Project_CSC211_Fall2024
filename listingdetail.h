@@ -11,37 +11,39 @@
 #include <QGroupBox>
 #include <QClipboard>
 #include <QGuiApplication>
+#include <QDesktopServices>
+#include <QUrl>
+#include <QApplication>
+#include "database.h"
 
 class ListingDetail : public QDialog {
     Q_OBJECT
 
 public:
     explicit ListingDetail(const HousingListing& listing, QWidget *parent = nullptr);
-    QString generateEmailTemplate() const {
-        return QString(
-                   "Dear %1,\n\n"
-                   "I am interested in the apartment at %2.\n"
-                   "I am a BMCC student and would like to schedule a viewing during your available times: %3.\n\n"
-                   "My details:\n"
-                   "- Name: [Your Name]\n"
-                   "- Phone: [Your Phone]\n\n"
-                   "Please let me know what documents I should bring to the viewing.\n\n"
-                   "Best regards,\n"
-                   "[Your Name]"
-                   ).arg(listing.getContactInfo().name)
-            .arg(listing.getAddress().c_str())
-            .arg(listing.getContactInfo().showingTimes[0].day + " " +
-                 listing.getContactInfo().showingTimes[0].startTime);
-    }
 private slots:
     void addToFavorites();
-    void sendApplication();
-
+signals:
+    void favoritesChanged();
 private:
-    QLabel *statusLabel;
-    void setupUI();
-    void updateDisplay();
     const HousingListing& listing;
+    void setupUI();
+    void loadImage();
+    QLabel* imageLabel;
+    void updateDisplay();
+    QString generateMessageTemplate() const {
+        QString contactName = listing.getContactInfo().name.isEmpty() ?
+                                  "Property Manager" : listing.getContactInfo().name;
+
+        return QString(
+                   "Hi %1,\n\n"
+                   "I saw your listing at %2 and I'm interested in viewing the apartment.\n"
+                   "I am a BMCC student looking for housing. Would it be possible to schedule a viewing?\n\n"
+                   "Thank you,\n"
+                   "[Your Name]\n"
+                   ).arg(contactName)
+            .arg(QString::fromStdString(listing.getAddress()));
+    }
 };
 
 #endif

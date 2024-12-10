@@ -12,72 +12,98 @@ RegistrationWindow::RegistrationWindow(QWidget *parent) : QDialog(parent) {
 void RegistrationWindow::setupUI() {
     setWindowTitle("Register - BMCC HomeQuest");
     setFixedWidth(400);
+    setFixedHeight(600);
+
+    setStyleSheet(
+        "QDialog { "
+        "   background-color: #371F76; "
+        "   color: white; "
+        "}"
+        "QLabel { "
+        "   color: white; "
+        "   font-size: 14px; "
+        "}"
+        "QPushButton { "
+        "   background-color: #C8A4D4; "
+        "   color: white; "
+        "   padding: 10px; "
+        "   border-radius: 6px; "
+        "   font-size: 14px; "
+        "   margin: 5px; "
+        "}"
+        "QLineEdit, QComboBox { "
+        "   background-color: #643B9F; "
+        "   color: white; "
+        "   padding: 8px; "
+        "   border-radius: 4px; "
+        "   font-size: 14px; "
+        "   margin: 5px; "
+        "}"
+        "QComboBox::drop-down { "
+        "   border: none; "
+        "}"
+        "QComboBox::down-arrow { "
+        "   image: none; "
+        "   border-width: 0px; "
+        "}"
+        );
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->setSpacing(15);
+    mainLayout->setContentsMargins(30, 30, 30, 30);
+
+    // Title
+    QLabel* titleLabel = new QLabel("Create Account", this);
+    titleLabel->setStyleSheet("font-size: 24px; font-weight: bold; margin-bottom: 20px;");
+    titleLabel->setAlignment(Qt::AlignCenter);
+    mainLayout->addWidget(titleLabel);
+
+    // Form layout for fields
     QFormLayout *formLayout = new QFormLayout();
+    formLayout->setSpacing(10);
 
-    // Basic Info Section
-    QLabel *basicInfoLabel = new QLabel("Basic Information", this);
-    basicInfoLabel->setStyleSheet("font-weight: bold; font-size: 14px;");
-    formLayout->addRow(basicInfoLabel);
-
+    // Email
     emailInput = new QLineEdit(this);
     emailInput->setPlaceholderText("username@stu.bmcc.cuny.edu");
     formLayout->addRow("BMCC Email:", emailInput);
 
+    // Password
     passwordInput = new QLineEdit(this);
     passwordInput->setEchoMode(QLineEdit::Password);
     passwordInput->setPlaceholderText("Minimum 8 characters");
     formLayout->addRow("Password:", passwordInput);
 
+    // Confirm Password
     confirmPasswordInput = new QLineEdit(this);
     confirmPasswordInput->setEchoMode(QLineEdit::Password);
     formLayout->addRow("Confirm Password:", confirmPasswordInput);
 
+    // User Type
     userTypeCombo = new QComboBox(this);
     userTypeCombo->addItems({"Student", "Landlord"});
     formLayout->addRow("User Type:", userTypeCombo);
 
-    // Student Information Section
-    QLabel *studentInfoLabel = new QLabel("Student Information", this);
-    studentInfoLabel->setStyleSheet("font-weight: bold; font-size: 14px; margin-top: 15px;");
-    formLayout->addRow(studentInfoLabel);
-
-    // Housing Preferences
-    QLabel *prefLabel = new QLabel("Housing Preferences", this);
-    prefLabel->setStyleSheet("font-weight: bold; font-size: 14px; margin-top: 15px;");
-    formLayout->addRow(prefLabel);
-
-    commuteInput = new QComboBox(this);
-    commuteInput->addItems({"15-30 minutes", "30-45 minutes", "45-60 minutes", "60+ minutes"});
-    formLayout->addRow("Max Commute Time:", commuteInput);
-
+    // Budget
     budgetInput = new QLineEdit(this);
     budgetInput->setPlaceholderText("Maximum monthly rent");
     formLayout->addRow("Budget ($/month):", budgetInput);
+
+    // Commute Time
+    commuteInput = new QComboBox(this);
+    commuteInput->addItems({"15-30 minutes", "30-45 minutes", "45-60 minutes", "60+ minutes"});
+    formLayout->addRow("Max Commute Time:", commuteInput);
 
     mainLayout->addLayout(formLayout);
 
     // Register button
     registerButton = new QPushButton("Register", this);
-    registerButton->setStyleSheet(
-        "QPushButton {"
-        "    background-color: #4CAF50;"
-        "    color: white;"
-        "    padding: 8px;"
-        "    border-radius: 4px;"
-        "    font-weight: bold;"
-        "}"
-        "QPushButton:hover {"
-        "    background-color: #45a049;"
-        "}"
-        );
+    registerButton->setStyleSheet(registerButton->styleSheet() + "background-color: #9B6BB3;");
     connect(registerButton, &QPushButton::clicked, this, &RegistrationWindow::onRegisterButtonClicked);
     mainLayout->addWidget(registerButton);
 
-    // Status label for errors
+    // Status label
     statusLabel = new QLabel(this);
-    statusLabel->setStyleSheet("color: red;");
+    statusLabel->setStyleSheet("color: #FF6B6B;");
     statusLabel->setWordWrap(true);
     mainLayout->addWidget(statusLabel);
 }
