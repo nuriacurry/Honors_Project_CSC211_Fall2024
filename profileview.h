@@ -23,6 +23,7 @@ private slots:
 private:
     QString userEmail;
     QVBoxLayout* favoritesLayout;
+    QWidget* favoritesContainer;
     void setupUI();
     QWidget* createListingCard(const HousingListing& listing);
 };

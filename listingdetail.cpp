@@ -24,12 +24,14 @@ void ListingDetail::setupUI() {
                               "<p><b>Price:</b> $%2</p>"
                               "<p><b>Bedrooms:</b> %3</p>"
                               "<p><b>Location:</b> %4</p>"
-                              "<p><b>Description:</b> %5</p>")
+                              "<p><b>Description:</b> %5</p>"
+                              "<p><b>Nearby Transit:</b> %6</p>")  // Add this line
                           .arg(QString::fromStdString(listing.getAddress()))
                           .arg(listing.getPrice())
                           .arg(listing.getBedrooms())
                           .arg(QString::fromStdString(listing.getNeighborhood()))
-                          .arg(QString::fromStdString(listing.getDescription()));
+                          .arg(QString::fromStdString(listing.getDescription()))
+                          .arg(QString::fromStdString(listing.getNearestSubway()));  // Add this line
 
     QLabel* detailsLabel = new QLabel(details, this);
     detailsLabel->setWordWrap(true);

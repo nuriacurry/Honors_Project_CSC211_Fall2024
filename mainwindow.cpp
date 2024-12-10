@@ -191,8 +191,24 @@ void MainWindow::searchListings() {
         if(maxPrice > 0 && listing.getPrice() > maxPrice) matches = false;
 
         // Borough filter (simplified)
-        if(borough != "Any" && !QString::fromStdString(listing.getNeighborhood()).toLower().contains(borough.toLower().toLocal8Bit().constData()))
-            matches = false;
+        if (borough != "Any") {
+            // Create a map of boroughs to neighborhoods
+            QMap<QString, QStringList> boroughMap;
+            boroughMap["Manhattan"] = {"Tribeca", "Financial District", "FiDi", "Chinatown",
+                                       "Little Italy", "East Village", "Gramercy", "Kips Bay", "Midtown West"};
+            boroughMap["Brooklyn"] = {"Williamsburg", "Greenpoint", "Crown Heights",
+                                      "Park Slope", "Clinton Hill", "Bushwick"};
+            boroughMap["Queens"] = {"Astoria", "Long Island City", "LIC", "Sunnyside"};
+            boroughMap["Bronx"] = {"Fordham", "Belmont", "University Heights", "Grand Concourse"};
+            boroughMap["Staten Island"] = {"St. George", "Stapleton"};
+
+            bool inBorough = false;
+            QString neighborhood = QString::fromStdString(listing.getNeighborhood());
+            if (boroughMap.contains(borough)) {
+                inBorough = boroughMap[borough].contains(neighborhood);
+            }
+            if (!inBorough) matches = false;
+        }
 
         // Amenities (simplified check)
         const Amenities& amen = listing.getAmenities();
