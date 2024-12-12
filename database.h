@@ -23,6 +23,7 @@ private:
 public:
     static DatabaseManager* getInstance();
     vector<HousingListing> getAllListings();
+    vector<HousingListing> getFavorites() const;
     void loadListings();
     void saveListings();
     void addListing(const HousingListing& listing);

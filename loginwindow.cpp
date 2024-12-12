@@ -10,7 +10,7 @@ LoginWindow::LoginWindow(QWidget *parent) : QDialog(parent) {
 void LoginWindow::setupUI() {
     setWindowTitle("BMCC HomeQuest - Login");
     setFixedWidth(400);
-    setFixedHeight(500);  // Make window bigger
+    setFixedHeight(500);
 
     setStyleSheet(
         "QDialog { "
@@ -24,10 +24,11 @@ void LoginWindow::setupUI() {
         "QPushButton { "
         "   background-color: #C8A4D4; "
         "   color: white; "
-        "   padding: 10px; "
-        "   border-radius: 6px; "
+        "   padding: 8px; "               // Reduced padding
+        "   border-radius: 4px; "         // Reduced border radius
         "   font-size: 14px; "
         "   margin: 5px; "
+        "   min-height: 20px; "           // Reduced minimum height
         "}"
         "QLineEdit { "
         "   background-color: #643B9F; "
@@ -80,6 +81,12 @@ void LoginWindow::setupUI() {
     });
     mainLayout->addWidget(registerButton);
 
+    // About button
+    aboutButton = new QPushButton("About HomeQuest", this);
+    aboutButton->setStyleSheet(aboutButton->styleSheet() + "background-color: #795695;");
+    connect(aboutButton, &QPushButton::clicked, this, &LoginWindow::showAboutDialog);
+    mainLayout->addWidget(aboutButton);
+
     // Status label
     statusLabel = new QLabel(this);
     statusLabel->setStyleSheet("color: #FF6B6B;");
@@ -114,4 +121,53 @@ void LoginWindow::showDebugInfo() {
         QMessageBox::information(this, "Users Cleared",
                                  "All users have been cleared. Please restart the application.");
     }
+}
+
+void LoginWindow::showAboutDialog() {
+    QDialog* aboutDialog = new QDialog(this);
+    aboutDialog->setWindowTitle("About BMCC HomeQuest");
+    aboutDialog->setFixedWidth(600);
+    aboutDialog->setStyleSheet(
+        "QDialog { background-color: #371F76; color: white; }"
+        "QLabel { color: white; padding: 20px; font-size: 14px; }"
+        "QPushButton { background-color: #C8A4D4; padding: 8px; border-radius: 4px; }"
+        );
+
+    QVBoxLayout* layout = new QVBoxLayout(aboutDialog);
+
+    QLabel* titleLabel = new QLabel("BMCC HomeQuest", aboutDialog);
+    titleLabel->setStyleSheet("font-size: 24px; font-weight: bold; padding-bottom: 20px;");
+    titleLabel->setAlignment(Qt::AlignCenter);
+
+    QLabel* descLabel = new QLabel(
+        "BMCC HomeQuest is an application designed to help BMCC students find affordable "
+        "and suitable housing near campus. This platform simplifies the housing search process "
+        "by providing:\n\n"
+        "• A centralized database of rental listings near BMCC with prices fixed between $500 and $3000\n"
+        "• Filters for price, location, and amenities\n"
+        "• Distance calculations to campus\n"
+        "• Nearby transit information\n"
+        "• Landlord contact details\n\n"
+        "How to use HomeQuest:\n\n"
+        "1. Create an account using your BMCC student email\n"
+        "2. Set your preferences for budget and commute time\n"
+        "3. Browse listings using our search filters\n"
+        "4. Save favorites and track your applications\n"
+        "5. Contact landlords directly through the app\n\n"
+        "Our mission is to make housing search easier for BMCC students, helping you find "
+        "affordable living arrangements that meet your needs and budget while maintaining a "
+        "reasonable commute to campus.",
+        aboutDialog
+        );
+    descLabel->setWordWrap(true);
+    descLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
+
+    QPushButton* closeButton = new QPushButton("Close", aboutDialog);
+    connect(closeButton, &QPushButton::clicked, aboutDialog, &QDialog::accept);
+
+    layout->addWidget(titleLabel);
+    layout->addWidget(descLabel);
+    layout->addWidget(closeButton);
+
+    aboutDialog->exec();
 }

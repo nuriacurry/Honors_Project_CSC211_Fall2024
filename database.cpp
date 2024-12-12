@@ -15,18 +15,23 @@ vector<HousingListing> DatabaseManager::getAllListings() {
 }
 
 void DatabaseManager::saveListings() {
+    qDebug() << "Saving favorites to database...";
     QString filePath = QDir::current().filePath("favorites.txt");
     QFile file(filePath);
+
     if(file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream out(&file);
         for(const auto& listing : listings) {
             if(listing.getFavorite()) {
+                qDebug() << "Saving favorite:" << QString::fromStdString(listing.getAddress());
                 out << QString::fromStdString(listing.getAddress()) << "\n";
             }
         }
         file.close();
+        qDebug() << "Favorites saved successfully";
+    } else {
+        qDebug() << "Failed to open favorites file for writing";
     }
-    loadListings(); // Reload to refresh the display
 }
 
 void DatabaseManager::loadListings() {
@@ -57,4 +62,14 @@ HousingListing DatabaseManager::getListing(int id) {
         return listings[id];
     }
     throw runtime_error("Listing not found");
+}
+
+vector<HousingListing> DatabaseManager::getFavorites() const {
+    vector<HousingListing> favorites;
+    for (const auto& listing : listings) {
+        if (listing.getFavorite()) {
+            favorites.push_back(listing);
+        }
+    }
+    return favorites;
 }

@@ -5,7 +5,6 @@
 
 ProfileView::ProfileView(const QString& email, QWidget* parent)
     : QDialog(parent), userEmail(email) {
-    favoritesLayout = new QVBoxLayout;
     setupUI();
     updateFavorites();
     setWindowTitle("BMCC HomeQuest - Student Profile");
@@ -31,30 +30,25 @@ void ProfileView::setupUI() {
     favoritesTitle->setStyleSheet("font-size: 18px; font-weight: bold; margin-top: 20px;");
     mainLayout->addWidget(favoritesTitle);
 
-    // Scrollable area for favorites
+    // Create a scroll area for favorites
     QScrollArea* scrollArea = new QScrollArea(this);
-    QWidget* scrollContent = new QWidget;
-    QVBoxLayout* favoritesLayout = new QVBoxLayout(scrollContent);
-
-    // Add favorites (placeholder for now)
-    QLabel* noFavoritesLabel = new QLabel("No favorites yet. Browse listings to add some!", this);
-    noFavoritesLabel->setStyleSheet("color: #AC94F4; font-style: italic;");
-    favoritesLayout->addWidget(noFavoritesLabel);
-
-    scrollContent->setLayout(favoritesLayout);
-    scrollArea->setWidget(scrollContent);
     scrollArea->setWidgetResizable(true);
     scrollArea->setStyleSheet("QScrollArea { border: none; background-color: #371F76; }");
+
+    // Create a widget to hold the favorites
+    QWidget* favoritesWidget = new QWidget(scrollArea);
+    favoritesLayout = new QVBoxLayout(favoritesWidget);
+    favoritesLayout->setAlignment(Qt::AlignTop);
+    scrollArea->setWidget(favoritesWidget);
     mainLayout->addWidget(scrollArea);
 
-    // Housing Tips Section
+    // Housing Tips and Logout buttons
     QPushButton* tipsButton = new QPushButton("View Housing Tips", this);
     connect(tipsButton, &QPushButton::clicked, this, &ProfileView::showTips);
     mainLayout->addWidget(tipsButton);
 
-    // Logout Button
     QPushButton* logoutButton = new QPushButton("Logout", this);
-    logoutButton->setStyleSheet("background-color: #795695; color: white; padding: 8px; border-radius: 4px;");
+    logoutButton->setStyleSheet("background-color: #795695;");
     connect(logoutButton, &QPushButton::clicked, this, &ProfileView::logout);
     mainLayout->addWidget(logoutButton);
 }
@@ -91,32 +85,27 @@ void ProfileView::logout() {
 void ProfileView::updateFavorites() {
     qDebug() << "Updating favorites...";
 
-    // Get the favorites container
-    QWidget* contentWidget = findChild<QWidget*>("favoritesContent");
-    if (!contentWidget) {
-        qDebug() << "Creating new favorites container";
-        contentWidget = new QWidget(this);
-        contentWidget->setObjectName("favoritesContent");
-        favoritesLayout->addWidget(contentWidget);
-    }
-
-    QVBoxLayout* layout = new QVBoxLayout(contentWidget);
-
-    bool hasFavorites = false;
-    auto listings = DatabaseManager::getInstance()->getAllListings();
-
-    for (const auto& listing : listings) {
-        if (listing.getFavorite()) {
-            hasFavorites = true;
-            QWidget* card = createListingCard(listing);
-            layout->addWidget(card);
+    // Clear existing items
+    while (QLayoutItem* item = favoritesLayout->takeAt(0)) {
+        if (QWidget* widget = item->widget()) {
+            widget->deleteLater();
         }
+        delete item;
     }
 
-    if (!hasFavorites) {
+    auto favorites = DatabaseManager::getInstance()->getFavorites();
+    qDebug() << "Found" << favorites.size() << "favorites";
+
+    if (favorites.empty()) {
         QLabel* noFavoritesLabel = new QLabel("No favorites yet. Browse listings to add some!");
-        noFavoritesLabel->setStyleSheet("color: #AC94F4; font-style: italic;");
-        layout->addWidget(noFavoritesLabel);
+        noFavoritesLabel->setStyleSheet("color: #AC94F4; font-style: italic; padding: 20px;");
+        noFavoritesLabel->setAlignment(Qt::AlignCenter);
+        favoritesLayout->addWidget(noFavoritesLabel);
+    } else {
+        for (const auto& listing : favorites) {
+            QWidget* card = createListingCard(listing);
+            favoritesLayout->addWidget(card);
+        }
     }
 }
 
@@ -152,4 +141,5 @@ QWidget* ProfileView::createListingCard(const HousingListing& listing) {
     layout->addLayout(detailsLayout);
 
     return card;
+
 }

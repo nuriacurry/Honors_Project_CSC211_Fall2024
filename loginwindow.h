@@ -19,6 +19,7 @@ public:
 private slots:
     void showDebugInfo();
     void onLoginButtonClicked();
+    void showAboutDialog();
 
 private:
     void setupUI();
@@ -27,6 +28,7 @@ private:
     QPushButton *loginButton;
     QPushButton *registerButton;
     QLabel *statusLabel;
+    QPushButton *aboutButton;
 };
 
 #endif

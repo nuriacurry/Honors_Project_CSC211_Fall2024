@@ -121,6 +121,25 @@ public:
     int getId() const { return id; }
     void setContactInfo(const ContactInfo& info) { contact = info; }
 
+    HousingListing(const HousingListing& other)
+        : id(other.id),
+        address(other.address),
+        neighborhood(other.neighborhood),
+        price(other.price),
+        bedrooms(other.bedrooms),
+        bathrooms(other.bathrooms),
+        description(other.description),
+        amenities(other.amenities),
+        landlordEmail(other.landlordEmail),
+        nearestSubway(other.nearestSubway),
+        distanceToBMCC(other.distanceToBMCC),
+        requirements(other.requirements),
+        imageUrl(other.imageUrl),
+        contact(other.contact),
+        mapUrl(other.mapUrl),
+        isFavorite(other.isFavorite)
+    {}
+
 };
 
 #endif

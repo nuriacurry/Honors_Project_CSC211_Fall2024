@@ -20,6 +20,9 @@ private slots:
     void logout();
     void updateFavorites();
 
+signals:  // Add this signals section
+    void favoritesChanged();
+
 private:
     QString userEmail;
     QVBoxLayout* favoritesLayout;

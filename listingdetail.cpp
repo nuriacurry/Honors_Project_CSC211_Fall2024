@@ -66,12 +66,22 @@ void ListingDetail::setupUI() {
     QPushButton* favoriteButton = new QPushButton(listing.getFavorite() ? "Remove from Favorites" : "Add to Favorites", this);
     connect(favoriteButton, &QPushButton::clicked, [this, favoriteButton]() {
         bool newState = !listing.getFavorite();
+        qDebug() << "Setting favorite state to:" << newState << "for listing:"
+                 << QString::fromStdString(listing.getAddress());
+
         const_cast<HousingListing&>(listing).setFavorite(newState);
         favoriteButton->setText(newState ? "Remove from Favorites" : "Add to Favorites");
+
+        DatabaseManager::getInstance()->saveListings();
+        qDebug() << "Saved listings to database";
+
+        emit favoritesChanged();
+        qDebug() << "Emitted favoritesChanged signal";
+
         QMessageBox::information(this, "Success",
                                  newState ? "Added to favorites!" : "Removed from favorites!");
-        emit favoritesChanged();
     });
+
     buttonLayout->addWidget(favoriteButton);
 
     mainLayout->addLayout(buttonLayout);

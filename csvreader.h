@@ -35,26 +35,29 @@ public:
             QStringList fields = line.split(",");
             qDebug() << "Processing line with" << fields.size() << "fields";
 
+
             if (fields.size() >= 10) {
                 try {
+                    // Parse amenities
+                    QString amenityStr = fields[8];  // Change this to correct column
+                    QStringList amenityList = amenityStr.split(";");
                     Amenities amen;
-                    QString amenityStr = fields.size() > 8 ? fields[8] : "";
-                    QStringList amenities = amenityStr.split(";");
-                    amen.furnished = amenities.contains("furnished");
-                    amen.utilitiesIncluded = amenities.contains("utilities");
-                    amen.wifi = amenities.contains("wifi");
-                    amen.laundry = amenities.contains("laundry");
-                    amen.petFriendly = amenities.contains("pets");
+                    amen.furnished = amenityList.contains("furnished");
+                    amen.utilitiesIncluded = amenityList.contains("utilities");
+                    amen.wifi = amenityList.contains("wifi");
+                    amen.laundry = amenityList.contains("laundry");
+                    amen.petFriendly = amenityList.contains("pets");
 
+                    // Create listing with correctly ordered data
                     HousingListing listing(
-                        fields[0].replace("\"", "").toStdString(),
-                        fields[1].replace("\"", "").toStdString(),
-                        fields[2].toDouble(),
-                        fields[3].toInt(),
-                        fields[4].toDouble(),
-                        fields[7].toStdString(),
-                        amen,
-                        fields[10].toStdString()
+                        fields[0].replace("\"", "").toStdString(),  // address
+                        fields[1].replace("\"", "").toStdString(),  // neighborhood
+                        fields[2].toDouble(),                       // price
+                        fields[3].toInt(),                         // bedrooms
+                        fields[4].toDouble(),                      // bathrooms
+                        fields[7].toStdString(),                   // description
+                        amen,                                      // amenities
+                        fields[10].toStdString()                   // contact
                         );
 
                     // Add contact info
@@ -73,6 +76,8 @@ public:
                     // Set image path
                     if (fields.size() > 9) {
                         QString imagePath = fields[9].replace("\"", "");
+                        // Remove any potential invalid characters
+                        imagePath = imagePath.trimmed();
                         listing.setImagePath(imagePath.toStdString());
                     }
 
